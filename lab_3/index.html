@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drumkit - Automat Perkusyjny</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #fff;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #ff9800;
+        }
+
+        .drum-keys {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 30px;
+            justify-content: center;
+        }
+
+        .key {
+            width: 80px;
+            height: 80px;
+            background-color: #2c2c2c;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.07s;
+            border: 2px solid #444;
+        }
+
+        .key.playing {
+            transform: scale(1.1);
+            background-color: #ff9800;
+            color: #000;
+            box-shadow: 0 0 10px #ff9800;
+        }
+
+        .key-letter {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .sound-name {
+            font-size: 12px;
+            margin-top: 5px;
+            text-transform: uppercase;
+        }
+
+        .controls {
+            background-color: #2c2c2c;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .channels {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .channel {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #3c3c3c;
+        }
+
+        .channel-number {
+            font-weight: bold;
+            width: 30px;
+        }
+
+        .channel-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            background-color: #ff9800;
+            color: #000;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background-color: #ffb74d;
+        }
+
+        button:disabled {
+            background-color: #777;
+            cursor: not-allowed;
+        }
+
+        .active-recording {
+            background-color: #f44336;
+            animation: pulse 1.5s infinite;
+        }
+
+        .active-playing {
+            background-color: #4caf50;
+        }
+
+        .active-stop {
+            background-color: #f44336;
+            animation: pulse-light 1.5s infinite;
+        }
+
+        .channel-status {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background-color: #555;
+        }
+
+        .channel-status.has-recording {
+            background-color: #4caf50;
+        }
+
+        .channel-status.is-playing {
+            background-color: #4caf50;
+            animation: pulse 1.5s infinite;
+        }
+
+        .global-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .metronome {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background-color: #3c3c3c;
+            padding: 10px 15px;
+            border-radius: 5px;
+        }
+
+        .metronome-light {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background-color: #555;
+        }
+
+        .metronome-light.active {
+            background-color: #f44336;
+        }
+
+        input[type="number"] {
+            width: 60px;
+            background-color: #444;
+            border: none;
+            color: white;
+            padding: 5px;
+            border-radius: 3px;
+        }
+
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+        }
+
+        .channel-select {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-left: 20px;
+        }
+
+        .channel-manager {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.6;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        @keyframes pulse-light {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.8;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .loop-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background-color: #3c3c3c;
+            padding: 10px 15px;
+            border-radius: 5px;
+        }
+
+        #stop-all.active {
+            background-color: #f44336;
+            animation: pulse-light 1.5s infinite;
+        }
+
+        #play-all.active {
+            background-color: #4caf50;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Drumkit - Automat Perkusyjny</h1>
+
+        <div class="drum-keys">
+            <div data-key="65" class="key">
+                <div class="key-letter">A</div>
+                <div class="sound-name">boom</div>
+            </div>
+            <div data-key="83" class="key">
+                <div class="key-letter">S</div>
+                <div class="sound-name">clap</div>
+            </div>
+            <div data-key="68" class="key">
+                <div class="key-letter">D</div>
+                <div class="sound-name">hihat</div>
+            </div>
+            <div data-key="70" class="key">
+                <div class="key-letter">F</div>
+                <div class="sound-name">kick</div>
+            </div>
+            <div data-key="71" class="key">
+                <div class="key-letter">G</div>
+                <div class="sound-name">openhat</div>
+            </div>
+            <div data-key="72" class="key">
+                <div class="key-letter">H</div>
+                <div class="sound-name">ride</div>
+            </div>
+            <div data-key="74" class="key">
+                <div class="key-letter">J</div>
+                <div class="sound-name">snare</div>
+            </div>
+            <div data-key="75" class="key">
+                <div class="key-letter">K</div>
+                <div class="sound-name">tink</div>
+            </div>
+            <div data-key="76" class="key">
+                <div class="key-letter">L</div>
+                <div class="sound-name">tom</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="global-controls">
+                <div class="metronome">
+                    <div class="metronome-light" id="metronome-light"></div>
+                    <label>
+                        Metronom:
+                        <input type="checkbox" id="metronome-toggle">
+                    </label>
+                    <label>
+                        BPM:
+                        <input type="number" id="metronome-bpm" min="30" max="300" value="120">
+                    </label>
+                </div>
+
+                <div class="loop-controls">
+                    <label>
+                        Loop:
+                        <input type="checkbox" id="loop-toggle">
+                    </label>
+                    <label>
+                        Takty:
+                        <input type="number" id="loop-bars" min="1" max="16" value="4">
+                    </label>
+                </div>
+
+                <button id="play-all">Odtwórz wszystkie</button>
+                <button id="stop-all">Stop</button>
+            </div>
+
+            <div class="channel-manager">
+                <button id="add-channel">Dodaj kanał</button>
+                <button id="remove-channel">Usuń kanał</button>
+            </div>
+
+            <div class="channels" id="channels-container">
+                <!-- Channels will be added dynamically -->
+            </div>
+        </div>
+
+        <audio data-key="65" src="sounds/boom.wav"></audio>
+        <audio data-key="83" src="sounds/clap.wav"></audio>
+        <audio data-key="68" src="sounds/hihat.wav"></audio>
+        <audio data-key="70" src="sounds/kick.wav"></audio>
+        <audio data-key="71" src="sounds/openhat.wav"></audio>
+        <audio data-key="72" src="sounds/ride.wav"></audio>
+        <audio data-key="74" src="sounds/snare.wav"></audio>
+        <audio data-key="75" src="sounds/tink.wav"></audio>
+        <audio data-key="76" src="sounds/tom.wav"></audio>
+    </div>
+
+    <script>
+        // Key mappings
+        const keyMap = {
+            65: 'boom',    // A
+            83: 'clap',    // S
+            68: 'hihat',   // D
+            70: 'kick',    // F
+            71: 'openhat', // G
+            72: 'ride',    // H
+            74: 'snare',   // J
+            75: 'tink',    // K
+            76: 'tom'      // L
+        };
+
+        // App state
+        const state = {
+            channels: [],
+            activeChannel: null,
+            isRecording: false,
+            isPlaying: false,
+            recordStartTime: 0,
+            metronomeActive: false,
+            metronomeBpm: 120,
+            metronomeInterval: null,
+            metronomeCount: 0,
+            loopActive: false,
+            loopBars: 4,
+            channelCount: 0,
+            anyChannelPlaying: false
+        };
+
+        // Initialize the application
+        function init() {
+            // Add initial channels
+            addChannel();
+            addChannel();
+            addChannel();
+            addChannel();
+
+            // Setup event listeners
+            setupKeyListeners();
+            setupButtonListeners();
+
+            // Refresh BPM value from input
+            document.getElementById('metronome-bpm').addEventListener('change', updateMetronomeBpm);
+
+            // Update loop settings
+            document.getElementById('loop-toggle').addEventListener('change', updateLoopSettings);
+            document.getElementById('loop-bars').addEventListener('change', updateLoopSettings);
+
+            // Setup metronome toggle
+            document.getElementById('metronome-toggle').addEventListener('change', toggleMetronome);
+        }
+
+        // Add a new channel
+        function addChannel() {
+            state.channelCount++;
+            const channelIndex = state.channelCount - 1;
+
+            // Create channel object
+            const channel = {
+                id: channelIndex,
+                events: [],
+                isPlaying: false,
+                hasRecording: false
+            };
+
+            state.channels.push(channel);
+
+            // Create channel DOM element
+            const channelEl = document.createElement('div');
+            channelEl.className = 'channel';
+            channelEl.innerHTML = `
+                <div class="channel-number">Ch ${channelIndex + 1}</div>
+                <div class="channel-status" id="channel-status-${channelIndex}"></div>
+                <div class="channel-controls">
+                    <button class="record-btn" id="record-btn-${channelIndex}" data-channel="${channelIndex}">Nagrywaj</button>
+                    <button class="play-btn" id="play-btn-${channelIndex}" data-channel="${channelIndex}">Odtwórz</button>
+                    <button class="stop-btn" id="stop-btn-${channelIndex}" data-channel="${channelIndex}">Stop</button>
+                </div>
+                <div class="channel-select">
+                    <input type="checkbox" id="channel-select-${channelIndex}" class="channel-checkbox" data-channel="${channelIndex}" checked>
+                    <label for="channel-select-${channelIndex}">Aktywny</label>
+                </div>
+            `;
+
+            document.getElementById('channels-container').appendChild(channelEl);
+
+            // Add event listeners for this channel's buttons
+            setupChannelListeners(channelIndex);
+        }
+
+        // Remove the last channel
+        function removeChannel() {
+            if (state.channelCount <= 1) return; // Always keep at least one channel
+
+            // If we're recording on the last channel, stop recording first
+            if (state.isRecording && state.activeChannel === state.channelCount - 1) {
+                stopRecording();
+            }
+
+            // If last channel is playing, stop it first
+            if (state.channels[state.channelCount - 1].isPlaying) {
+                stopChannel(state.channelCount - 1);
+            }
+
+            // Remove from DOM
+            const channelsContainer = document.getElementById('channels-container');
+            channelsContainer.removeChild(channelsContainer.lastChild);
+
+            // Remove from state
+            state.channels.pop();
+            state.channelCount--;
+
+            // Update global playing state
+            updateGlobalPlayingState();
+        }
+
+        // Set up listeners for a specific channel
+        function setupChannelListeners(channelIndex) {
+            const recordBtn = document.querySelector(`.record-btn[data-channel="${channelIndex}"]`);
+            const playBtn = document.querySelector(`.play-btn[data-channel="${channelIndex}"]`);
+            const stopBtn = document.querySelector(`.stop-btn[data-channel="${channelIndex}"]`);
+
+            recordBtn.addEventListener('click', function () {
+                if (state.isRecording && state.activeChannel === channelIndex) {
+                    stopRecording();
+                } else {
+                    startRecording(channelIndex);
+                }
+            });
+
+            playBtn.addEventListener('click', () => playChannel(channelIndex));
+            stopBtn.addEventListener('click', () => stopChannel(channelIndex));
+        }
+
+        // Set up keyboard listeners
+        function setupKeyListeners() {
+            window.addEventListener('keydown', playSound);
+            window.addEventListener('keyup', removeTransition);
+        }
+
+        // Set up button listeners
+        function setupButtonListeners() {
+            document.querySelectorAll('.key').forEach(key => {
+                key.addEventListener('click', function () {
+                    const keyCode = this.getAttribute('data-key');
+                    playSound({ keyCode });
+                });
+                key.addEventListener('transitionend', removeTransition);
+            });
+
+            document.getElementById('play-all').addEventListener('click', playAllChannels);
+            document.getElementById('stop-all').addEventListener('click', stopAllChannels);
+            document.getElementById('add-channel').addEventListener('click', addChannel);
+            document.getElementById('remove-channel').addEventListener('click', removeChannel);
+        }
+
+        // Play a sound when a key is pressed
+        function playSound(e) {
+            const keyCode = e.keyCode || e.target?.getAttribute('data-key');
+
+            // Check if this key has a sound assigned
+            if (!keyMap[keyCode]) return;
+
+            const audio = document.querySelector(`audio[data-key="${keyCode}"]`);
+            const key = document.querySelector(`.key[data-key="${keyCode}"]`);
+
+            if (!audio) return;
+
+            // Reset audio position and play
+            audio.currentTime = 0;
+            audio.play();
+
+            // Add visual feedback
+            key.classList.add('playing');
+
+            // Record the sound if we're recording
+            if (state.isRecording && state.activeChannel !== null) {
+                const timeOffset = Date.now() - state.recordStartTime;
+                state.channels[state.activeChannel].events.push({
+                    keyCode,
+                    time: timeOffset
+                });
+            }
+        }
+
+        // Remove transition class when animation ends
+        function removeTransition(e) {
+            if (e.propertyName !== 'transform') return;
+            this.classList.remove('playing');
+        }
+
+        // Start recording on a channel
+        function startRecording(channelIndex) {
+            // If we're already recording on a different channel, stop first
+            if (state.isRecording) {
+                stopRecording();
+            }
+
+            // Reset the channel
+            state.channels[channelIndex].events = [];
+            state.channels[channelIndex].hasRecording = false;
+            updateChannelStatus(channelIndex);
+
+            // Start recording
+            state.isRecording = true;
+            state.activeChannel = channelIndex;
+            state.recordStartTime = Date.now();
+
+            // Visual feedback
+            const recordBtn = document.getElementById(`record-btn-${channelIndex}`);
+            recordBtn.classList.add('active-recording');
+            recordBtn.textContent = 'Stop';
+        }
+
+        // Stop recording
+        function stopRecording() {
+            if (!state.isRecording) return;
+
+            const channelIndex = state.activeChannel;
+            const recordBtn = document.getElementById(`record-btn-${channelIndex}`);
+
+            // Update state
+            state.isRecording = false;
+            state.channels[channelIndex].hasRecording = state.channels[channelIndex].events.length > 0;
+            updateChannelStatus(channelIndex);
+
+            // Reset UI
+            recordBtn.classList.remove('active-recording');
+            recordBtn.textContent = 'Nagrywaj';
+
+            state.activeChannel = null;
+        }
+
+        // Update channel status indicator
+        function updateChannelStatus(channelIndex) {
+            const statusEl = document.getElementById(`channel-status-${channelIndex}`);
+            const channel = state.channels[channelIndex];
+
+            statusEl.classList.remove('has-recording', 'is-playing');
+
+            if (channel.isPlaying) {
+                statusEl.classList.add('is-playing');
+            } else if (channel.hasRecording) {
+                statusEl.classList.add('has-recording');
+            }
+        }
+
+        // Update button states for a channel
+        function updateChannelButtonStates(channelIndex) {
+            const playBtn = document.getElementById(`play-btn-${channelIndex}`);
+            const stopBtn = document.getElementById(`stop-btn-${channelIndex}`);
+            const channel = state.channels[channelIndex];
+
+            // Reset classes
+            playBtn.classList.remove('active-playing');
+            stopBtn.classList.remove('active-stop');
+
+            // Set appropriate classes based on state
+            if (channel.isPlaying) {
+                playBtn.classList.add('active-playing');
+                stopBtn.classList.add('active-stop');
+            }
+        }
+
+        // Update global playing state
+        function updateGlobalPlayingState() {
+            state.anyChannelPlaying = state.channels.some(channel => channel.isPlaying);
+
+            const playAllBtn = document.getElementById('play-all');
+            const stopAllBtn = document.getElementById('stop-all');
+
+            playAllBtn.classList.toggle('active', state.anyChannelPlaying);
+            stopAllBtn.classList.toggle('active', state.anyChannelPlaying);
+        }
+
+        // Play a specific channel
+        function playChannel(channelIndex) {
+            if (state.channels[channelIndex].isPlaying || !state.channels[channelIndex].hasRecording) return;
+
+            state.channels[channelIndex].isPlaying = true;
+            updateChannelStatus(channelIndex);
+            updateChannelButtonStates(channelIndex);
+            updateGlobalPlayingState();
+
+            const events = [...state.channels[channelIndex].events];
+
+            // Calculate max duration for looping
+            let maxDuration = 0;
+            if (state.loopActive) {
+                // With BPM and bars, calculate milliseconds for the loop
+                const beatsPerBar = 4; // Assuming 4/4 time
+                const beatDuration = 60000 / state.metronomeBpm; // milliseconds per beat
+                maxDuration = state.loopBars * beatsPerBar * beatDuration;
+            } else if (events.length > 0) {
+                // Use the time of the last event if not looping
+                maxDuration = events[events.length - 1].time + 100; // Add a small buffer
+            }
+
+            // Play each sound at the right time
+            events.forEach(event => {
+                setTimeout(() => {
+                    const audio = document.querySelector(`audio[data-key="${event.keyCode}"]`);
+                    const key = document.querySelector(`.key[data-key="${event.keyCode}"]`);
+
+                    if (audio && state.channels[channelIndex].isPlaying) {
+                        audio.currentTime = 0;
+                        audio.play();
+                        key.classList.add('playing');
+                    }
+                }, event.time);
+            });
+
+            // If looping, schedule the next loop
+            if (state.loopActive && maxDuration > 0) {
+                setTimeout(() => {
+                    if (state.channels[channelIndex].isPlaying) {
+                        playChannel(channelIndex);
+                    }
+                }, maxDuration);
+            } else if (maxDuration > 0) {
+                // If not looping, mark channel as done playing after all events
+                setTimeout(() => {
+                    if (state.channels[channelIndex].isPlaying) {
+                        stopChannel(channelIndex);
+                    }
+                }, maxDuration);
+            }
+        }
+
+        // Stop playing a specific channel
+        function stopChannel(channelIndex) {
+            state.channels[channelIndex].isPlaying = false;
+            updateChannelStatus(channelIndex);
+            updateChannelButtonStates(channelIndex);
+            updateGlobalPlayingState();
+        }
+
+        // Play all selected channels
+        function playAllChannels() {
+            // Get all selected channels
+            const selectedChannels = [];
+            document.querySelectorAll('.channel-checkbox').forEach(checkbox => {
+                if (checkbox.checked) {
+                    selectedChannels.push(parseInt(checkbox.getAttribute('data-channel')));
+                }
+            });
+
+            // Play each selected channel
+            selectedChannels.forEach(channelIndex => {
+                if (state.channels[channelIndex].hasRecording) {
+                    playChannel(channelIndex);
+                }
+            });
+        }
+
+        // Stop all channels
+        function stopAllChannels() {
+            state.channels.forEach((channel, index) => {
+                if (channel.isPlaying) {
+                    stopChannel(index);
+                }
+            });
+        }
+
+        // Toggle metronome on/off
+        function toggleMetronome() {
+            const metronomeToggle = document.getElementById('metronome-toggle');
+            state.metronomeActive = metronomeToggle.checked;
+
+            if (state.metronomeActive) {
+                startMetronome();
+            } else {
+                stopMetronome();
+            }
+        }
+
+        // Update metronome BPM
+        function updateMetronomeBpm() {
+            const bpmInput = document.getElementById('metronome-bpm');
+            state.metronomeBpm = parseInt(bpmInput.value);
+
+            // Restart metronome if active to apply new BPM
+            if (state.metronomeActive) {
+                stopMetronome();
+                startMetronome();
+            }
+        }
+
+        // Start the metronome
+        function startMetronome() {
+            if (state.metronomeInterval) clearInterval(state.metronomeInterval);
+
+            const beatDuration = 60000 / state.metronomeBpm;
+            const metronomeLight = document.getElementById('metronome-light');
+
+            state.metronomeCount = 0;
+            state.metronomeInterval = setInterval(() => {
+                // Play metronome sound
+                const isFirstBeat = state.metronomeCount % 4 === 0;
+                const soundKey = isFirstBeat ? 70 : 75; // Kick for first beat, Tink for others
+
+                const audio = document.querySelector(`audio[data-key="${soundKey}"]`);
+                if (audio) {
+                    audio.currentTime = 0;
+                    audio.play();
+                }
+
+                // Visual feedback
+                metronomeLight.classList.add('active');
+                setTimeout(() => {
+                    metronomeLight.classList.remove('active');
+                }, 100);
+
+                state.metronomeCount++;
+            }, beatDuration);
+        }
+
+        // Stop the metronome
+        function stopMetronome() {
+            if (state.metronomeInterval) {
+                clearInterval(state.metronomeInterval);
+                state.metronomeInterval = null;
+            }
+        }
+
+        // Update loop settings
+        function updateLoopSettings() {
+            const loopToggle = document.getElementById('loop-toggle');
+            const loopBarsInput = document.getElementById('loop-bars');
+
+            state.loopActive = loopToggle.checked;
+            state.loopBars = parseInt(loopBarsInput.value);
+        }
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+
+</html>

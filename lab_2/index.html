@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slider obrazów</title>
+    <link rel="stylesheet" href="./styles.css">
+</head>
+
+<body>
+    <div class="slider-container">
+        <div class="slider" id="slider">
+            <div class="slide">
+                <img src="https://picsum.photos/800/400" alt="Mountain landscape" onclick="openLightbox(this)">
+                <div class="slide-content">
+                    <h3>Zdjęcie nr. 1</h3>
+                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit.</p>
+                </div>
+            </div>
+            <div class="slide">
+                <img src="https://picsum.photos/800/400" alt="Ocean view" onclick="openLightbox(this)">
+                <div class="slide-content">
+                    <h3>Zdjęcie nr. 2</h3>
+                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit.</p>
+                </div>
+            </div>
+            <div class="slide">
+                <img src="https://picsum.photos/800/400" alt="Forest path" onclick="openLightbox(this)">
+                <div class="slide-content">
+                    <h3>Zdjęcie nr. 3</h3>
+                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit.</p>
+                </div>
+            </div>
+            <div class="slide">
+                <img src="https://picsum.photos/800/400" alt="City skyline" onclick="openLightbox(this)">
+                <div class="slide-content">
+                    <h3>Zdjęcie nr. 4</h3>
+                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit.</p>
+                </div>
+            </div>
+        </div>
+
+        <button class="nav-btn prev" id="prev">&#10094;</button>
+        <button class="nav-btn next" id="next">&#10095;</button>
+
+        <div class="indicators" id="indicators"></div>
+    </div>
+
+    <div class="slider-controls">
+        <button class="control-btn" id="pause-play">Pauza</button>
+        <button class="control-btn" id="animation-toggle">Przełącz na Zanikanie</button>
+        <button class="control-btn" id="ken-burns-toggle">Włącz efekt Ken Burns</button>
+    </div>
+
+    <div class="lightbox" id="lightbox">
+        <span class="close-lightbox" id="close-lightbox">&times;</span>
+        <img id="lightbox-img" src="" alt="obraz w lightboxie">
+    </div>
+
+    <script src="./main.js" type="module"></script>
+</body>
+
+</html>
