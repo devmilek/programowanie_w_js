@@ -1,11 +1,55 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>NotePocket</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f7f7f7; margin: 0; }
+        .container { max-width: 900px; margin: 30px auto; background: #fff; padding: 20px; border-radius: 8px; }
+        .note { border-radius: 6px; padding: 16px; margin: 10px 0; position: relative; }
+        .note.pinned { border: 2px solid #ff9800; }
+        .note .pin { position: absolute; top: 10px; right: 10px; cursor: pointer; }
+        .note .reminder { color: #d32f2f; font-size: 0.9em; }
+        .note .tags { font-size: 0.9em; color: #555; }
+        .note .checklist { margin: 10px 0; }
+        .note .checklist li { cursor: pointer; }
+        .note .checklist .done { text-decoration: line-through; color: #888; }
+        .note .actions { margin-top: 10px; }
+        .note .actions button { margin-right: 5px; }
+        #reminder-banner { background: #ffeb3b; color: #222; padding: 10px; margin-bottom: 10px; border-radius: 5px; display: none; }
+        #search { width: 100%; padding: 8px; margin-bottom: 15px; }
+        #note-form { margin-bottom: 20px; }
+        #note-form input, #note-form textarea { width: 100%; margin-bottom: 8px; }
+        #note-form label { font-weight: bold; }
+        #note-form .checklist-inputs { display: flex; gap: 5px; }
+        #note-form .tags-input { width: 100%; }
+    </style>
 </head>
 <body>
-    <script src="main.js"></script>
+<div class="container">
+    <h1>NotePocket</h1>
+    <div id="reminder-banner"></div>
+    <input type="text" id="search" placeholder="Szukaj notatek...">
+    <form id="note-form">
+        <label>Tytuł: <input type="text" id="title" required></label>
+        <label>Treść: <textarea id="content" required></textarea></label>
+        <label>Kolor: <input type="color" id="color" value="#fff59d"></label>
+        <label>Przypnij: <input type="checkbox" id="pin"></label>
+        <label>Tagi (oddzielone przecinkami): <input type="text" id="tags" class="tags-input"></label>
+        <label>Przypomnienie: <input type="datetime-local" id="reminder"></label>
+        <div>
+            <label>Checklist:</label>
+            <div class="checklist-inputs">
+                <input type="text" id="checklist-item" placeholder="Dodaj punkt">
+                <button type="button" id="add-checklist-item">Dodaj</button>
+            </div>
+            <ul id="checklist-preview"></ul>
+        </div>
+        <button type="submit" id="save-btn">Dodaj notatkę</button>
+        <button type="button" id="cancel-edit" style="display:none;">Anuluj edycję</button>
+    </form>
+    <div id="notes-list"></div>
+</div>
+<script src="main.js"></script>
 </body>
 </html>
