@@ -1,192 +1,581 @@
-const notesKey = 'notepocket_notes';
-let notes = [];
-let editingId = null;
-let checklistDraft = [];
+const addNoteBtn = document.getElementById('add-note-btn');
+const searchInput = document.getElementById('search-input');
+const notesContainer = document.getElementById('notes-container');
+const noteModal = document.getElementById('note-modal');
+const modalTitle = document.getElementById('modal-title');
+const noteIdInput = document.getElementById('note-id');
+const noteTitleInput = document.getElementById('note-title');
+const noteContentArea = document.getElementById('note-content-area');
+const noteContentInput = document.getElementById('note-content');
+const noteChecklistArea = document.getElementById('note-checklist-area');
+const checklistItemsContainer = document.getElementById('checklist-items-container');
+const newChecklistItemTextInput = document.getElementById('new-checklist-item-text');
+const addChecklistItemBtn = document.getElementById('add-checklist-item-btn');
+const noteTagsInput = document.getElementById('note-tags');
+const noteColorInput = document.getElementById('note-color');
+const noteReminderInput = document.getElementById('note-reminder');
+const clearReminderBtn = document.getElementById('clear-reminder-btn');
+const saveNoteBtn = document.getElementById('save-note-btn');
+const cancelNoteBtn = document.getElementById('cancel-note-btn');
+const noteTypeRadios = document.querySelectorAll('input[name="note-type"]');
+const reminderPopup = document.getElementById('reminder-popup');
+const reminderPopupContent = document.getElementById('reminder-popup-content');
+const closeReminderPopupBtn = document.getElementById('close-reminder-popup');
 
-function saveNotes() {
-    localStorage.setItem(notesKey, JSON.stringify(notes));
-}
+let currentChecklistItems = [];
+let activeReminders = {};
 
-function loadNotes() {
-    notes = JSON.parse(localStorage.getItem(notesKey) || '[]');
-}
+// zarzadzanie notatkami
 
-function renderNotes(filter = '') {
-    const list = document.getElementById('notes-list');
-    list.innerHTML = '';
-    let filtered = notes;
-    if (filter) {
-        const q = filter.toLowerCase();
-        filtered = notes.filter(note =>
-            note.title.toLowerCase().includes(q) ||
-            note.content.toLowerCase().includes(q) ||
-            (note.tags && note.tags.some(tag => tag.toLowerCase().includes(q))) ||
-            (note.checklist && note.checklist.some(item => item.text.toLowerCase().includes(q)))
-        );
-    }
-    // Pinned notes first
-    filtered.sort((a, b) => (b.pin - a.pin) || (b.created - a.created));
-    for (const note of filtered) {
-        const div = document.createElement('div');
-        div.className = 'note' + (note.pin ? ' pinned' : '');
-        div.style.background = note.color;
-        div.innerHTML = `
-            <div class="pin" title="Przypnij/odepnij">&#128204;</div>
-            <h3>${note.title}</h3>
-            <div>${note.content.replace(/\n/g, '<br>')}</div>
-            <div class="tags">${note.tags && note.tags.length ? 'Tagi: ' + note.tags.join(', ') : ''}</div>
-            <div class="reminder">${note.reminder ? 'Przypomnienie: ' + new Date(note.reminder).toLocaleString() : ''}</div>
-            <div>Utworzono: ${new Date(note.created).toLocaleString()}</div>
-            <ul class="checklist">
-                ${note.checklist.map((item, idx) =>
-                    `<li class="${item.done ? 'done' : ''}" data-note="${note.id}" data-idx="${idx}">${item.text}</li>`
-                ).join('')}
-            </ul>
-            <div class="actions">
-                <button data-edit="${note.id}">Edytuj</button>
-                <button data-delete="${note.id}">Usuń</button>
-            </div>
-        `;
-        list.appendChild(div);
-    }
-}
-
-function resetForm() {
-    document.getElementById('note-form').reset();
-    document.getElementById('save-btn').textContent = 'Dodaj notatkę';
-    document.getElementById('cancel-edit').style.display = 'none';
-    checklistDraft = [];
-    renderChecklistPreview();
-    editingId = null;
-}
-
-function renderChecklistPreview() {
-    const ul = document.getElementById('checklist-preview');
-    ul.innerHTML = checklistDraft.map((item, idx) =>
-        `<li>${item.text} <button data-remove="${idx}">Usuń</button></li>`
-    ).join('');
-}
-
-function showReminderBanner() {
-    const now = Date.now();
-    const due = notes.filter(n => n.reminder && !n.reminderShown && new Date(n.reminder).getTime() <= now);
-    const banner = document.getElementById('reminder-banner');
-    if (due.length) {
-        banner.style.display = 'block';
-        banner.innerHTML = 'Przypomnienie: ' + due.map(n => `<b>${n.title}</b>`).join(', ');
-        due.forEach(n => n.reminderShown = true);
-        saveNotes();
-    } else {
-        banner.style.display = 'none';
-    }
-}
-
-// --- Event Listeners ---
-
-document.getElementById('add-checklist-item').onclick = () => {
-    const input = document.getElementById('checklist-item');
-    const text = input.value.trim();
-    if (text) {
-        checklistDraft.push({ text, done: false });
-        input.value = '';
-        renderChecklistPreview();
-    }
-};
-
-document.getElementById('checklist-preview').onclick = (e) => {
-    if (e.target.dataset.remove !== undefined) {
-        checklistDraft.splice(Number(e.target.dataset.remove), 1);
-        renderChecklistPreview();
-    }
-};
-
-document.getElementById('note-form').onsubmit = function (e) {
-    e.preventDefault();
-    const title = document.getElementById('title').value.trim();
-    const content = document.getElementById('content').value.trim();
-    const color = document.getElementById('color').value;
-    const pin = document.getElementById('pin').checked;
-    const tags = document.getElementById('tags').value.split(',').map(t => t.trim()).filter(Boolean);
-    const reminder = document.getElementById('reminder').value;
-    let checklist = checklistDraft.map(item => ({ ...item }));
-
-    if (editingId) {
-        const note = notes.find(n => n.id === editingId);
-        Object.assign(note, { title, content, color, pin, tags, reminder, checklist });
-    } else {
-        notes.push({
-            id: Date.now().toString(),
-            title, content, color, pin, tags, reminder,
-            created: Date.now(),
-            checklist,
-            reminderShown: false
+const getNotes = () => {
+    const notesJson = localStorage.getItem('notes');
+    try {
+        const notes = notesJson ? JSON.parse(notesJson) : [];
+        return notes.map(note => ({
+            id: note.id || Date.now().toString(),
+            title: note.title || '',
+            content: note.content || '',
+            pinned: note.pinned || false,
+            createdAt: note.createdAt || new Date().toISOString(),
+            color: note.color || 'default',
+            tags: Array.isArray(note.tags) ? note.tags : [],
+            reminderDate: note.reminderDate || null,
+            type: note.type || 'text',
+            checklist: Array.isArray(note.checklist) ? note.checklist : [],
+        })).sort((a, b) => {
+            if (a.pinned !== b.pinned) return b.pinned - a.pinned;
+            return new Date(b.createdAt) - new Date(a.createdAt);
         });
-    }
-    saveNotes();
-    resetForm();
-    renderNotes(document.getElementById('search').value);
-    showReminderBanner();
-};
-
-document.getElementById('cancel-edit').onclick = resetForm;
-
-document.getElementById('notes-list').onclick = function (e) {
-    // Pin/unpin
-    if (e.target.classList.contains('pin')) {
-        const idx = Array.from(this.children).indexOf(e.target.closest('.note'));
-        const note = notes[idx];
-        note.pin = !note.pin;
-        saveNotes();
-        renderNotes(document.getElementById('search').value);
-        return;
-    }
-    // Edit
-    if (e.target.dataset.edit) {
-        const note = notes.find(n => n.id === e.target.dataset.edit);
-        editingId = note.id;
-        document.getElementById('title').value = note.title;
-        document.getElementById('content').value = note.content;
-        document.getElementById('color').value = note.color;
-        document.getElementById('pin').checked = note.pin;
-        document.getElementById('tags').value = (note.tags || []).join(', ');
-        document.getElementById('reminder').value = note.reminder || '';
-        checklistDraft = note.checklist ? note.checklist.map(i => ({ ...i })) : [];
-        renderChecklistPreview();
-        document.getElementById('save-btn').textContent = 'Zapisz zmiany';
-        document.getElementById('cancel-edit').style.display = '';
-        return;
-    }
-    // Delete
-    if (e.target.dataset.delete) {
-        notes = notes.filter(n => n.id !== e.target.dataset.delete);
-        saveNotes();
-        renderNotes(document.getElementById('search').value);
-        showReminderBanner();
-        return;
-    }
-    // Checklist toggle
-    if (e.target.tagName === 'LI' && e.target.parentElement.classList.contains('checklist')) {
-        const noteId = e.target.dataset.note;
-        const idx = Number(e.target.dataset.idx);
-        const note = notes.find(n => n.id === noteId);
-        note.checklist[idx].done = !note.checklist[idx].done;
-        saveNotes();
-        renderNotes(document.getElementById('search').value);
+    } catch (e) {
+        console.error("Błąd podczas przetwarzania notatek z localStorage:", e);
+        localStorage.removeItem('notes');
+        return [];
     }
 };
 
-document.getElementById('search').oninput = function () {
-    renderNotes(this.value);
+const saveNotes = (notes) => {
+    localStorage.setItem('notes', JSON.stringify(notes));
+    checkReminders();
 };
 
-function periodicReminderCheck() {
-    showReminderBanner();
-    setTimeout(periodicReminderCheck, 30000);
-}
+const renderNotes = (filter = '') => {
+    const notes = getNotes();
+    notesContainer.innerHTML = '';
+    const searchTerm = filter.toLowerCase().trim();
 
-// --- Init ---
-loadNotes();
-resetForm();
-renderNotes();
-showReminderBanner();
-periodicReminderCheck();
+    const filteredNotes = notes.filter(note => {
+        const searchInData = [
+            note.title,
+            note.type === 'text' ? (note.content || '') : '',
+            ...(note.tags || []),
+            ...(note.checklist ? note.checklist.map(item => item.text) : [])
+        ].join(' ').toLowerCase();
+        return searchInData.includes(searchTerm);
+    });
+
+    if (filteredNotes.length === 0) {
+        notesContainer.innerHTML = `<p class="text-gray-500 col-span-full text-center">${searchTerm ? 'Nie znaleziono notatek.' : 'Brak notatek, dodaj pierwszą!'}</p>`;
+        return;
+    }
+
+    filteredNotes.forEach(note => {
+        if (note && note.id) {
+            const noteElement = createNoteElement(note);
+            notesContainer.appendChild(noteElement);
+        } else {
+            console.error("nieprawidlowa notatka:", note);
+        }
+    });
+};
+
+const createNoteElement = (note) => {
+    const div = document.createElement('div');
+    div.classList.add('note', 'p-4', 'rounded-lg', 'shadow-md', `note-color-${note.color || 'default'}`);
+    div.dataset.id = note.id;
+
+    const header = document.createElement('div');
+    header.classList.add('flex', 'justify-between', 'items-start', 'mb-2');
+    const title = document.createElement('h3');
+    title.classList.add('text-lg', 'font-semibold', 'break-words');
+    title.textContent = note.title;
+    header.appendChild(title);
+    const pinButton = createPinButton(note);
+    header.appendChild(pinButton);
+    div.appendChild(header);
+
+    const contentWrapper = document.createElement('div');
+    contentWrapper.classList.add('note-content-wrapper');
+    if (note.type === 'checklist' && Array.isArray(note.checklist)) {
+        renderChecklistInNote(note, contentWrapper);
+    } else {
+        renderTextContentInNote(note, contentWrapper);
+    }
+    div.appendChild(contentWrapper);
+
+    const footer = createNoteFooter(note);
+    div.appendChild(footer);
+
+    div.addEventListener('click', (e) => {
+        if (e.target.closest('button') || e.target.closest('input[type="checkbox"]')) {
+            return;
+        }
+        openModal(note);
+    });
+
+    return div;
+};
+
+const createPinButton = (note) => {
+    const pinButton = document.createElement('button');
+    pinButton.classList.add('text-gray-500', 'hover:text-yellow-500', 'focus:outline-none', 'ml-2', 'flex-shrink-0');
+    pinButton.innerHTML = `<i class="fas fa-thumbtack fa-lg ${note.pinned ? 'text-yellow-500' : 'text-gray-400'}"></i>`;
+    pinButton.title = note.pinned ? "Odepnij" : "Przypnij";
+    pinButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        togglePinNote(note.id);
+    });
+    return pinButton;
+};
+
+const renderChecklistInNote = (note, container) => {
+    (note.checklist || []).forEach((item, index) => {
+        const itemDiv = document.createElement('div');
+        itemDiv.classList.add('flex', 'items-center', 'mb-2');
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = item.done;
+        checkbox.classList.add('mr-2', 'h-4', 'w-4', 'text-blue-600', 'border-gray-300', 'rounded', 'focus:ring-blue-500');
+        checkbox.addEventListener('change', (e) => {
+            toggleChecklistItem(note.id, index);
+        });
+        itemDiv.appendChild(checkbox);
+
+        const span = document.createElement('span');
+        span.textContent = item.text;
+        span.classList.add('flex-grow', 'break-words');
+        if (item.done) {
+            span.classList.add('line-through', 'text-gray-500');
+        }
+        itemDiv.appendChild(span);
+
+        container.appendChild(itemDiv);
+    });
+};
+
+const renderTextContentInNote = (note, container) => {
+    const content = document.createElement('p');
+    content.classList.add('text-gray-700', 'whitespace-pre-wrap');
+    content.textContent = note.content || '';
+    container.appendChild(content);
+};
+
+const createNoteFooter = (note) => {
+    const footer = document.createElement('div');
+    footer.classList.add('mt-auto', 'pt-2', 'border-t', 'border-gray-200');
+
+    if (Array.isArray(note.tags) && note.tags.length > 0) {
+        const tagsDiv = document.createElement('div');
+        tagsDiv.classList.add('mb-2');
+        note.tags.forEach(tag => {
+            const tagSpan = document.createElement('span');
+            tagSpan.classList.add('tag');
+            tagSpan.textContent = tag;
+            tagsDiv.appendChild(tagSpan);
+        });
+        footer.appendChild(tagsDiv);
+    }
+
+    const infoDiv = createNoteInfoDiv(note);
+    footer.appendChild(infoDiv);
+
+    const controlsDiv = createNoteControls(note);
+    footer.appendChild(controlsDiv);
+
+    return footer;
+};
+
+const createNoteInfoDiv = (note) => {
+    const infoDiv = document.createElement('div');
+    infoDiv.classList.add('text-xs', 'text-gray-500', 'mb-2');
+    const dateSpan = document.createElement('span');
+    try {
+        dateSpan.textContent = `Utworzono: ${new Date(note.createdAt).toLocaleString('pl-PL')}`;
+    } catch {
+        dateSpan.textContent = `Utworzono: (bledna data)`;
+    }
+    infoDiv.appendChild(dateSpan);
+
+    if (note.reminderDate) {
+        const reminderSpan = document.createElement('span');
+        reminderSpan.classList.add('block', 'mt-1');
+        try {
+            const reminderTime = new Date(note.reminderDate);
+            reminderSpan.innerHTML = `<i class="fas fa-bell mr-1 text-blue-500"></i> Przyp.: ${reminderTime.toLocaleString('pl-PL')}`;
+            if (reminderTime < new Date()) {
+                reminderSpan.classList.add('text-red-500', 'font-semibold');
+            }
+        } catch {
+            reminderSpan.innerHTML = `<i class="fas fa-bell mr-1 text-red-500"></i> Przyp.: (błędna data)`;
+        }
+        infoDiv.appendChild(reminderSpan);
+    }
+    return infoDiv;
+};
+
+const createNoteControls = (note) => {
+    const controlsDiv = document.createElement('div');
+    controlsDiv.classList.add('flex', 'justify-end', 'space-x-3');
+
+    const editButton = createControlButton('Edytuj', 'fas fa-edit', ['text-gray-500', 'hover:text-blue-500'], (e) => {
+        e.stopPropagation();
+        openModal(note);
+    });
+
+    const deleteButton = createControlButton('Usuń', 'fas fa-trash-alt', ['text-gray-500', 'hover:text-red-500'], (e) => {
+        e.stopPropagation();
+        const noteIdToDelete = note.id;
+        const noteTitleToDelete = note.title;
+        if (confirm(`Czy na pewno chcesz usunac  "${noteTitleToDelete}"?`)) {
+            deleteNote(noteIdToDelete);
+        }
+    });
+
+    controlsDiv.appendChild(editButton);
+    controlsDiv.appendChild(deleteButton);
+    return controlsDiv;
+};
+
+const createControlButton = (title, iconClass, classList = [], onClick) => {
+    const button = document.createElement('button');
+    button.classList.add('focus:outline-none', 'p-1', ...classList);
+    button.innerHTML = `<i class="${iconClass} fa-lg"></i>`;
+    button.title = title;
+    button.addEventListener('click', onClick);
+    return button;
+};
+
+
+const addNote = (data) => {
+    const notes = getNotes();
+    const newNote = {
+        id: Date.now().toString(),
+        title: data.title,
+        content: data.type === 'text' ? data.content : '',
+        checklist: data.type === 'checklist' ? data.checklist : [],
+        color: data.color,
+        tags: data.tags,
+        pinned: false,
+        createdAt: new Date().toISOString(),
+        reminderDate: data.reminderDate,
+        type: data.type
+    };
+    notes.push(newNote);
+    saveNotes(notes);
+    renderNotes(searchInput.value);
+};
+
+const updateNote = (id, data) => {
+    const notes = getNotes();
+    const noteIndex = notes.findIndex(note => note.id === id);
+    if (noteIndex > -1) {
+        notes[noteIndex] = {
+            ...notes[noteIndex],
+            title: data.title,
+            content: data.type === 'text' ? data.content : '',
+            checklist: data.type === 'checklist' ? data.checklist : [],
+            color: data.color,
+            tags: data.tags,
+            reminderDate: data.reminderDate,
+            type: data.type
+        };
+        saveNotes(notes);
+        renderNotes(searchInput.value);
+    } else {
+        console.error("Nie znaleziono notatki id:", id);
+    }
+};
+
+const deleteNote = (id) => {
+    let notes = getNotes();
+    const initialLength = notes.length;
+    notes = notes.filter(note => note.id !== id);
+    const finalLength = notes.length;
+
+    if (initialLength === finalLength) {
+        alert("nie znaleziono takiej notatki");
+        return;
+    }
+
+    saveNotes(notes);
+    renderNotes(searchInput.value);
+};
+
+const togglePinNote = (id) => {
+    const notes = getNotes();
+    const noteIndex = notes.findIndex(note => note.id === id);
+    if (noteIndex > -1) {
+        notes[noteIndex].pinned = !notes[noteIndex].pinned;
+        saveNotes(notes);
+        renderNotes(searchInput.value);
+    }
+};
+
+const toggleChecklistItem = (noteId, itemIndex) => {
+    const notes = getNotes();
+    const noteIndex = notes.findIndex(note => note.id === noteId);
+    if (noteIndex > -1 && notes[noteIndex].checklist && notes[noteIndex].checklist[itemIndex] !== undefined) {
+        notes[noteIndex].checklist[itemIndex].done = !notes[noteIndex].checklist[itemIndex].done;
+        saveNotes(notes);
+        renderNotes(searchInput.value);
+    }
+};
+
+// modal
+
+const openModal = (note = null) => {
+    resetModalForm();
+
+    if (note) {
+        modalTitle.textContent = 'Edytuj notatkę';
+        noteIdInput.value = note.id;
+        noteTitleInput.value = note.title;
+        noteColorInput.value = note.color || 'default';
+        noteTagsInput.value = Array.isArray(note.tags) ? note.tags.join(', ') : '';
+        noteReminderInput.value = note.reminderDate ? note.reminderDate.substring(0, 16) : '';
+
+        const noteType = note.type === 'checklist' ? 'checklist' : 'text';
+        document.querySelector(`input[name="note-type"][value="${noteType}"]`).checked = true;
+        updateModalView(noteType);
+
+        if (noteType === 'text') {
+            noteContentInput.value = note.content || '';
+        } else {
+            currentChecklistItems = note.checklist ? JSON.parse(JSON.stringify(note.checklist)) : [];
+            renderChecklistInModal();
+        }
+
+    } else {
+        modalTitle.textContent = 'Dodaj nowa notatkę';
+        updateModalView('text');
+    }
+
+    noteModal.classList.remove('hidden');
+    setTimeout(() => {
+        noteModal.classList.remove('opacity-0');
+        noteModal.querySelector('.modal-content').classList.remove('scale-95');
+    }, 10);
+};
+
+const closeModal = () => {
+    noteModal.classList.add('opacity-0');
+    noteModal.querySelector('.modal-content').classList.add('scale-95');
+    setTimeout(() => {
+        noteModal.classList.add('hidden');
+        resetModalForm();
+    }, 300);
+};
+
+const resetModalForm = () => {
+    noteIdInput.value = '';
+    noteTitleInput.value = '';
+    noteContentInput.value = '';
+    noteColorInput.value = 'default';
+    noteTagsInput.value = '';
+    noteReminderInput.value = '';
+    document.querySelector('input[name="note-type"][value="text"]').checked = true;
+    updateModalView('text');
+    currentChecklistItems = [];
+    renderChecklistInModal();
+};
+
+const updateModalView = (type) => {
+    if (type === 'checklist') {
+        noteContentArea.classList.add('hidden');
+        noteChecklistArea.classList.remove('hidden');
+    } else {
+        noteContentArea.classList.remove('hidden');
+        noteChecklistArea.classList.add('hidden');
+    }
+};
+
+const renderChecklistInModal = () => {
+    checklistItemsContainer.innerHTML = '';
+    currentChecklistItems.forEach((item, index) => {
+        const itemDiv = document.createElement('div');
+        itemDiv.classList.add('flex', 'items-center', 'mb-2', 'p-1', 'hover:bg-gray-100', 'rounded');
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = item.done;
+        checkbox.classList.add('mr-2', 'h-4', 'w-4', 'text-blue-600', 'border-gray-300', 'rounded', 'focus:ring-blue-500');
+        checkbox.addEventListener('change', () => {
+            currentChecklistItems[index].done = checkbox.checked;
+            renderChecklistInModal();
+        });
+        itemDiv.appendChild(checkbox);
+
+        const span = document.createElement('span');
+        span.textContent = item.text;
+        span.classList.add('flex-grow', 'break-words', 'px-2');
+        if (item.done) {
+            span.classList.add('line-through', 'text-gray-500');
+        }
+        itemDiv.appendChild(span);
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.innerHTML = '&times;';
+        deleteBtn.title = 'Usuń element';
+        deleteBtn.classList.add('ml-auto', 'text-red-500', 'hover:text-red-700', 'font-bold', 'flex-shrink-0', 'px-1');
+        deleteBtn.type = 'button';
+        deleteBtn.onclick = () => {
+            currentChecklistItems.splice(index, 1);
+            renderChecklistInModal();
+        };
+        itemDiv.appendChild(deleteBtn);
+
+        checklistItemsContainer.appendChild(itemDiv);
+    });
+};
+
+// listenery
+
+addNoteBtn.addEventListener('click', () => openModal());
+cancelNoteBtn.addEventListener('click', closeModal);
+noteModal.addEventListener('click', (e) => {
+    if (e.target === noteModal) closeModal();
+});
+
+saveNoteBtn.addEventListener('click', () => {
+    const id = noteIdInput.value;
+    const title = noteTitleInput.value.trim();
+    const color = noteColorInput.value;
+    const tags = noteTagsInput.value.split(',')
+        .map(tag => tag.trim())
+        .filter(tag => tag !== '');
+    const reminderValue = noteReminderInput.value;
+    const reminderDate = reminderValue ? new Date(reminderValue).toISOString() : null;
+    const type = document.querySelector('input[name="note-type"]:checked').value;
+
+    let content = '';
+    let checklist = [];
+
+    if (type === 'text') {
+        content = noteContentInput.value.trim();
+    } else {
+        checklist = currentChecklistItems;
+    }
+
+    if (!title) {
+        alert("Tytuł notatki nie może być pusty.");
+        noteTitleInput.focus(); return;
+    }
+    if (type === 'text' && !content) {
+        alert("Treść notatki nie może być pusta.");
+        noteContentInput.focus(); return;
+    }
+    if (type === 'checklist' && checklist.length === 0) {
+        alert("Lista zadań nie może być pusta. Dodaj przynajmniej jeden element.");
+        newChecklistItemTextInput.focus(); return;
+    }
+
+    const noteData = { title, content, checklist, color, tags, reminderDate, type };
+
+    if (id) {
+        updateNote(id, noteData);
+    } else {
+        addNote(noteData);
+    }
+
+    closeModal();
+});
+
+searchInput.addEventListener('input', (e) => {
+    renderNotes(e.target.value);
+});
+
+noteTypeRadios.forEach(radio => {
+    radio.addEventListener('change', (e) => {
+        updateModalView(e.target.value);
+    });
+});
+
+addChecklistItemBtn.addEventListener('click', () => {
+    const text = newChecklistItemTextInput.value.trim();
+    if (text) {
+        currentChecklistItems.push({ text: text, done: false });
+        newChecklistItemTextInput.value = '';
+        renderChecklistInModal();
+        newChecklistItemTextInput.focus();
+    }
+});
+
+newChecklistItemTextInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        addChecklistItemBtn.click();
+    }
+});
+
+clearReminderBtn.addEventListener('click', () => {
+    noteReminderInput.value = '';
+});
+
+closeReminderPopupBtn.addEventListener('click', () => {
+    reminderPopup.style.display = 'none';
+    const noteId = reminderPopup.dataset.noteId;
+    if (noteId) {
+        delete activeReminders[noteId];
+        delete reminderPopup.dataset.noteId;
+    }
+});
+
+// powiadomienia
+
+let reminderInterval = null;
+
+const checkReminders = () => {
+    const notes = getNotes();
+    const now = new Date();
+    let reminderToShow = null;
+
+    notes.forEach(note => {
+        if (note.reminderDate && !activeReminders[note.id]) {
+            try {
+                const reminderTime = new Date(note.reminderDate);
+                if (reminderTime <= now) {
+                    if (!reminderToShow || reminderTime < new Date(reminderToShow.reminderDate)) {
+                        reminderToShow = note;
+                    }
+                }
+            } catch (e) {
+                console.error(`blad daty dla notatki o id: ${note.id}:`, e);
+            }
+        }
+    });
+
+    if (reminderToShow) {
+        displayReminderPopup(reminderToShow);
+    }
+};
+
+const displayReminderPopup = (note) => {
+    reminderPopupContent.innerHTML = `
+        <p class="font-semibold break-words"><strong>${note.title}</strong></p>
+        <p><small>${new Date(note.reminderDate).toLocaleString('pl-PL')}</small></p>
+        ${note.content ? `<p class="text-sm break-words">${note.content.substring(0, 70)}${note.content.length > 70 ? '...' : ''}</p>` : ''}
+        ${note.type === 'checklist' ? `<p class="text-sm italic">(Lista zadań)</p>` : ''}
+    `;
+    reminderPopup.dataset.noteId = note.id;
+    activeReminders[note.id] = true;
+    reminderPopup.style.display = 'block';
+};
+
+// start
+
+document.addEventListener('DOMContentLoaded', () => {
+    renderNotes();
+    checkReminders();
+    if (reminderInterval) clearInterval(reminderInterval);
+    reminderInterval = setInterval(checkReminders, 30 * 1000);
+});

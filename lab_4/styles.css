@@ -1,0 +1,140 @@
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+.note {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.note-content-wrapper {
+    flex-grow: 1;
+    overflow-y: auto;
+    max-height: 200px;
+    margin-bottom: 1rem;
+}
+
+.note:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.modal {
+    transition: opacity 0.3s ease;
+    z-index: 50;
+}
+
+.modal-content {
+    transition: transform 0.3s ease;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.tag {
+    display: inline-block;
+    background-color: #e5e7eb;
+    border-radius: 9999px;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.note-color-default {
+    background-color: #ffffff;
+}
+
+.note-color-red {
+    background-color: #fecaca;
+}
+
+.note-color-yellow {
+    background-color: #fef08a;
+}
+
+.note-color-green {
+    background-color: #bbf7d0;
+}
+
+.note-color-blue {
+    background-color: #bfdbfe;
+}
+
+.note-color-purple {
+    background-color: #e9d5ff;
+}
+
+textarea::-webkit-scrollbar,
+.modal-content::-webkit-scrollbar,
+.note-content-wrapper::-webkit-scrollbar {
+    display: none;
+}
+
+textarea,
+.modal-content,
+.note-content-wrapper {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Usunięto style dla .checklist-item - klasy Tailwind będą stosowane bezpośrednio w JS */
+
+/* Style dla przypomnień */
+#reminder-popup {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #fef08a;
+    color: #333;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    z-index: 100;
+    max-width: 300px;
+    border: 1px solid #facc15;
+    display: none;
+    animation: fadeIn 0.5s ease-out;
+}
+
+#reminder-popup h4 {
+    margin: 0 0 10px 0;
+    font-weight: bold;
+    border-bottom: 1px solid #facc15;
+    padding-bottom: 5px;
+}
+
+#reminder-popup p {
+    margin: 0 0 5px 0;
+    word-wrap: break-word;
+}
+
+#reminder-popup button {
+    background: none;
+    border: none;
+    color: #333;
+    font-size: 1.2em;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

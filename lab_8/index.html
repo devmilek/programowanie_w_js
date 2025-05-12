@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikacja Pogodowa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./styles.css" />
+</head>
+
+<body class="p-4 md:p-8">
+    <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-lg">
+        <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">Pogodynka</h1>
+
+        <div class="mb-6 relative">
+            <label for="cityInput" class="block text-sm font-medium text-gray-700 mb-1">Dodaj miasto:</label>
+            <div class="flex items-center space-x-2">
+                <input type="text" id="cityInput" placeholder="Wpisz nazwę miasta..."
+                    class="flex-grow p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <button id="addCityBtn"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-5 rounded-lg transition duration-300 ease-in-out">Dodaj</button>
+            </div>
+            <div id="suggestions" class="hidden"></div>
+            <p id="error-message" class="text-red-500 text-sm mt-1 hidden"></p>
+            <p id="limit-message" class="text-yellow-600 text-sm mt-1 hidden">Osiągnięto limit 10 lokalizacji.</p>
+        </div>
+
+        <h2 class="text-2xl font-semibold mb-4 text-gray-700">Zapisane lokalizacje:</h2>
+        <div id="weatherCards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        </div>
+
+        <div id="chartModal"
+            class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center hidden px-4">
+            <div class="relative mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+                <div class="flex justify-between items-center border-b pb-3 mb-3">
+                    <h3 class="text-xl font-semibold text-gray-900" id="chartModalTitle">Prognoza godzinowa</h3>
+                    <button id="closeChartModal"
+                        class="text-black text-3xl leading-none hover:text-gray-600 focus:outline-none">&times;</button>
+                </div>
+                <div class="mt-3 text-center">
+                    <canvas id="hourlyChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="./main.js"></script>
+</body>
+
+</html>

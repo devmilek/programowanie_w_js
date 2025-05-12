@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LAB 5: Operacje Asynchroniczne</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 text-gray-800 font-sans leading-relaxed p-5">
+    <div id="container" class="bg-white p-6 rounded-lg shadow-md max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-4 text-gray-900">
+            Operacje asynchroniczne
+        </h1>
+
+        <h2 class="text-2xl font-semibold mb-3 text-gray-800">
+            Definicja funkcji <code>asyncAdd</code>:
+        </h2>
+        <pre class="bg-gray-200 p-4 rounded-md overflow-x-auto text-sm my-4"><code>
+            const asyncAdd = async (a,b) => {
+            if (typeof a !== 'number' || typeof b !== 'number') {
+            return Promise.reject('Argumenty muszą mieć typ number!')
+            }
+            return new Promise((resolve, reject) => {
+            setTimeout(() =>{
+            resolve(a+b)
+            }, 100)
+            })             }
+        </code></pre>
+
+        <button id="runTestsButton"
+            class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-5 disabled:opacity-50 disabled:cursor-not-allowed">
+            Uruchom Testy (100 elementów)
+        </button>
+        <p id="loader" class="font-bold text-red-600 mt-2" style="display: none">
+            Przetwarzanie, prosze czekac...
+        </p>
+
+        <div id="resultsArea" class="mt-6"></div>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+
+</html>

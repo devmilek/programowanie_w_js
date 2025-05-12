@@ -1,55 +1,135 @@
 <!DOCTYPE html>
 <html lang="pl">
+
 <head>
     <meta charset="UTF-8">
-    <title>NotePocket</title>
-    <style>
-        body { font-family: Arial, sans-serif; background: #f7f7f7; margin: 0; }
-        .container { max-width: 900px; margin: 30px auto; background: #fff; padding: 20px; border-radius: 8px; }
-        .note { border-radius: 6px; padding: 16px; margin: 10px 0; position: relative; }
-        .note.pinned { border: 2px solid #ff9800; }
-        .note .pin { position: absolute; top: 10px; right: 10px; cursor: pointer; }
-        .note .reminder { color: #d32f2f; font-size: 0.9em; }
-        .note .tags { font-size: 0.9em; color: #555; }
-        .note .checklist { margin: 10px 0; }
-        .note .checklist li { cursor: pointer; }
-        .note .checklist .done { text-decoration: line-through; color: #888; }
-        .note .actions { margin-top: 10px; }
-        .note .actions button { margin-right: 5px; }
-        #reminder-banner { background: #ffeb3b; color: #222; padding: 10px; margin-bottom: 10px; border-radius: 5px; display: none; }
-        #search { width: 100%; padding: 8px; margin-bottom: 15px; }
-        #note-form { margin-bottom: 20px; }
-        #note-form input, #note-form textarea { width: 100%; margin-bottom: 8px; }
-        #note-form label { font-weight: bold; }
-        #note-form .checklist-inputs { display: flex; gap: 5px; }
-        #note-form .tags-input { width: 100%; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LAB 4 - Notekeep</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="./styles.css" />
 </head>
-<body>
-<div class="container">
-    <h1>NotePocket</h1>
-    <div id="reminder-banner"></div>
-    <input type="text" id="search" placeholder="Szukaj notatek...">
-    <form id="note-form">
-        <label>Tytuł: <input type="text" id="title" required></label>
-        <label>Treść: <textarea id="content" required></textarea></label>
-        <label>Kolor: <input type="color" id="color" value="#fff59d"></label>
-        <label>Przypnij: <input type="checkbox" id="pin"></label>
-        <label>Tagi (oddzielone przecinkami): <input type="text" id="tags" class="tags-input"></label>
-        <label>Przypomnienie: <input type="datetime-local" id="reminder"></label>
-        <div>
-            <label>Checklist:</label>
-            <div class="checklist-inputs">
-                <input type="text" id="checklist-item" placeholder="Dodaj punkt">
-                <button type="button" id="add-checklist-item">Dodaj</button>
+
+<body class="bg-gray-100 p-5">
+
+    <div class="container mx-auto max-w-7xl">
+        <h1 class="text-4xl font-bold text-center text-gray-800 mb-6">Notekeep</h1>
+
+        <div class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
+            <div class="relative w-full sm:w-1/2 lg:w-1/3">
+                <input type="search" id="search-input" placeholder="Szukaj w notatkach..."
+                    class="w-full p-3 pl-10 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 shadow-sm">
+                <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
             </div>
-            <ul id="checklist-preview"></ul>
+            <button id="add-note-btn"
+                class="py-2 px-4 rounded-lg font-semibold shadow-md transition duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed bg-blue-500 text-white hover:bg-blue-600 w-full sm:w-auto">
+                <i class="fas fa-plus mr-2"></i>Dodaj notatkę
+            </button>
         </div>
-        <button type="submit" id="save-btn">Dodaj notatkę</button>
-        <button type="button" id="cancel-edit" style="display:none;">Anuluj edycję</button>
-    </form>
-    <div id="notes-list"></div>
-</div>
-<script src="main.js"></script>
+
+        <div id="notes-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        </div>
+    </div>
+
+    <div id="note-modal"
+        class="modal fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 hidden opacity-0">
+        <div class="modal-content bg-white p-6 rounded-lg shadow-xl w-full max-w-lg transform scale-95">
+            <h2 id="modal-title" class="text-2xl font-semibold mb-5">Dodaj nową notatkę</h2>
+            <input type="hidden" id="note-id">
+
+            <div class="mb-4">
+                <label for="note-title" class="block text-sm font-medium text-gray-700 mb-1">Tytuł</label>
+                <input type="text" id="note-title"
+                    class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Typ notatki</label>
+                <div class="flex space-x-4">
+                    <label class="flex items-center">
+                        <input type="radio" name="note-type" value="text" checked
+                            class="mr-1 focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300"> Tekst
+                    </label>
+                    <label class="flex items-center">
+                        <input type="radio" name="note-type" value="checklist"
+                            class="mr-1 focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300"> Lista zadań
+                    </label>
+                </div>
+            </div>
+
+            <div id="note-content-area" class="mb-4">
+                <label for="note-content" class="block text-sm font-medium text-gray-700 mb-1">Treść</label>
+                <textarea id="note-content" rows="5"
+                    class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 resize-none"></textarea>
+            </div>
+
+            <div id="note-checklist-area" class="mb-4 hidden">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Lista zadań</label>
+                <div id="checklist-items-container"
+                    class="mb-2 max-h-40 overflow-y-auto border border-gray-200 rounded-md p-2 bg-gray-50">
+                </div>
+                <div class="flex items-center">
+                    <input type="text" id="new-checklist-item-text" placeholder="Dodaj nowy element..."
+                        class="flex-grow p-2 border border-gray-300 rounded-l-md focus:ring-blue-500 focus:border-blue-500">
+                    <button id="add-checklist-item-btn"
+                        class="py-2 px-3 rounded-l-none rounded-r-md font-semibold shadow-md transition duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed bg-gray-300 text-gray-800 hover:bg-gray-400"
+                        title="Dodaj element">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label for="note-tags" class="block text-sm font-medium text-gray-700 mb-1">Tagi (oddzielone
+                    przecinkami)</label>
+                <input type="text" id="note-tags" placeholder="np. praca, projekt, ważne"
+                    class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+            </div>
+
+            <div class="mb-4">
+                <label for="note-color" class="block text-sm font-medium text-gray-700 mb-1">Kolor</label>
+                <select id="note-color"
+                    class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white">
+                    <option value="default" class="note-color-default">Domyślny</option>
+                    <option value="red" class="note-color-red">Czerwony</option>
+                    <option value="yellow" class="note-color-yellow">Żółty</option>
+                    <option value="green" class="note-color-green">Zielony</option>
+                    <option value="blue" class="note-color-blue">Niebieski</option>
+                    <option value="purple" class="note-color-purple">Fioletowy</option>
+                </select>
+            </div>
+
+            <div class="mb-6">
+                <label for="note-reminder" class="block text-sm font-medium text-gray-700 mb-1">Przypomnienie
+                    (opcjonalnie)</label>
+                <input type="datetime-local" id="note-reminder"
+                    class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                <button id="clear-reminder-btn" class="text-xs text-blue-600 hover:underline mt-1">Wyczyść
+                    przypomnienie</button>
+            </div>
+
+            <div class="flex justify-end space-x-3">
+                <button id="cancel-note-btn"
+                    class="py-2 px-4 rounded-lg font-semibold shadow-md transition duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed bg-gray-300 text-gray-800 hover:bg-gray-400">Anuluj</button>
+                <button id="save-note-btn"
+                    class="py-2 px-4 rounded-lg font-semibold shadow-md transition duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed bg-blue-500 text-white hover:bg-blue-600">Zapisz</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="reminder-popup">
+        <button id="close-reminder-popup">&times;</button>
+        <h4><i class="fas fa-bell mr-2"></i>Przypomnienie!</h4>
+        <div id="reminder-popup-content"></div>
+    </div>
+
+    <script src="./main.js">
+
+    </script>
+
 </body>
+
 </html>
