@@ -72,22 +72,6 @@ body {
     background-color: #e9d5ff;
 }
 
-textarea::-webkit-scrollbar,
-.modal-content::-webkit-scrollbar,
-.note-content-wrapper::-webkit-scrollbar {
-    display: none;
-}
-
-textarea,
-.modal-content,
-.note-content-wrapper {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-}
-
-/* Usunięto style dla .checklist-item - klasy Tailwind będą stosowane bezpośrednio w JS */
-
-/* Style dla przypomnień */
 #reminder-popup {
     position: fixed;
     bottom: 20px;

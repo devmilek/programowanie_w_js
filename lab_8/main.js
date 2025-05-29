@@ -294,7 +294,7 @@ async function displayHourlyChart(city) {
         labels: labels,
         datasets: [
           {
-            label: "Temperatura (°C)",
+            label: "Temperatura (C)",
             data: temperatures,
             fill: true,
             borderColor: "rgb(59, 130, 246)",
