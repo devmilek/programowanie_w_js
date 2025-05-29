@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>slider</title>
+    <link rel="stylesheet" href="./styles.css">
+</head>
+
+<body>
+    <div class="slider-container">
+        <div class="slider-wrapper">
+            <div class="slides" id="slides">
+                <div class="slide" style="background-image: url('https://picsum.photos/800/400?random=1')">
+                    <div class="slide-content">
+                        <h2>Pierwszy Slajd</h2>
+                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Ullam voluptates ut aut
+                            necessitatibus alias unde sequi obcaecati laboriosam atque in mollitia voluptatem inventore
+                            vero ipsum officiis dignissimos, tempore, quaerat numquam.</p>
+                    </div>
+                </div>
+                <div class="slide" style="background-image: url('https://picsum.photos/800/400?random=2')">
+                    <div class="slide-content">
+                        <h2>Drugi Slajd</h2>
+                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Totam culpa maxime aut nisi dicta
+                            explicabo nam temporibus hic illum eius. Ipsum magnam exercitationem itaque deserunt officia
+                            adipisci illo quos nobis?</p>
+                    </div>
+                </div>
+                <div class="slide" style="background-image: url('https://picsum.photos/800/400?random=3')">
+                    <div class="slide-content">
+                        <h2>Trzeci Slajd</h2>
+                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Sit, eum doloremque dignissimos
+                            neque sequi alias illum inventore minus impedit iusto non iure, quos in molestiae
+                            reiciendis, necessitatibus nam sapiente aliquam.</p>
+                    </div>
+                </div>
+                <div class="slide" style="background-image: url('https://picsum.photos/800/400?random=4')">
+                    <div class="slide-content">
+                        <h2>Czwarty Slajd</h2>
+                        <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Error deleniti nemo, inventore
+                            quaerat officiis doloremque ipsa, est eos dolorem odio iste totam eius aperiam maxime
+                            possimus repudiandae atque ipsam hic!</p>
+                    </div>
+                </div>
+                <div class="slide" style="background-image: url('https://picsum.photos/800/400?random=5')">
+                    <div class="slide-content">
+                        <h2>Piaty Slajd</h2>
+                        <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Officiis ducimus voluptate
+                            distinctio aperiam temporibus quae nesciunt deserunt aspernatur. Cupiditate aut provident
+                            aperiam reiciendis eos velit enim laborum minima quaerat facilis?</p>
+                    </div>
+                </div>
+            </div>
+
+            <button class="nav-btn prev-btn" id="prevBtn">❮</button>
+            <button class="nav-btn next-btn" id="nextBtn">❯</button>
+
+            <div class="controls">
+                <button class="play-pause-btn" id="playPauseBtn">Pauza</button>
+            </div>
+        </div>
+
+        <div class="dots-container" id="dotsContainer">
+            <span class="dot active" data-slide="0"></span>
+            <span class="dot" data-slide="1"></span>
+            <span class="dot" data-slide="2"></span>
+            <span class="dot" data-slide="3"></span>
+            <span class="dot" data-slide="4"></span>
+        </div>
+    </div>
+
+    <div class="lightbox" id="lightbox">
+        <span class="lightbox-close" id="lightboxClose">&times;</span>
+        <img id="lightboxImg" src="" alt="">
+    </div>
+
+    <script src="main.js"></script>
+</body>
+
+</html>

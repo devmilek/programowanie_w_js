@@ -53,7 +53,7 @@
      margin-bottom: 10px;
  }
 
- /* Navigation Buttons */
+ /* nawigacja */
  .nav-btn {
      position: absolute;
      top: 50%;
@@ -86,7 +86,7 @@
      right: 10px;
  }
 
- /* Indicators */
+ /* idnicatory */
  .indicators {
      position: absolute;
      bottom: 20px;
@@ -133,7 +133,7 @@
      background: #3a70c0;
  }
 
- /* Animation Types */
+ /* typy animacji */
  .fade .slide {
      opacity: 0;
      position: absolute;
@@ -146,7 +146,7 @@
      opacity: 1;
  }
 
- /* Lightbox */
+ /* loghtbox */
  .lightbox {
      position: fixed;
      top: 0;
